@@ -18,7 +18,7 @@ const formatUser = (user, token) => ({
   token
 });
 
-exports.register = async (req, res) => {
+exports.register = async (req, res , next) => {
   try {
     const { name, email, password, targetRole, experienceLevel } = req.body;
 
@@ -47,7 +47,7 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (req, res , next) => {
   try {
     const { email, password } = req.body;
 
