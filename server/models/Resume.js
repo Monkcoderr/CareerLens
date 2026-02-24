@@ -1,64 +1,42 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema(
+const resumeSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: [true, 'Name is required'],
-      trim: true,
-      maxlength: 50
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
     },
-    email: {
+    fileName: {
       type: String,
-      required: [true, 'Email is required'],
-      unique: true,
-      lowercase: true,
-      trim: true
+      required: true
     },
-    password: {
+    rawText: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: 6
+      required: true
     },
     targetRole: {
       type: String,
       default: ''
     },
-    experienceLevel: {
-      type: String,
-      enum: ['fresher', 'junior', 'mid', 'senior', 'lead'],
-      default: 'fresher'
-    },
-    skills: {
-      type: [String],
-      default: []
-    },
-    resumeScore: {
-      type: Number,
-      default: 0
-    },
-    interviewsTaken: {
-      type: Number,
-      default: 0
-    },
-    avgInterviewScore: {
-      type: Number,
-      default: 0
+    analysis: {
+      overallScore: { type: Number, default: 0 },
+      atsCompatibility: { type: Number, default: 0 },
+      sections: {
+        contact: { score: { type: Number, default: 0 }, feedback: { type: String, default: '' } },
+        experience: { score: { type: Number, default: 0 }, feedback: { type: String, default: '' } },
+        education: { score: { type: Number, default: 0 }, feedback: { type: String, default: '' } },
+        skills: { score: { type: Number, default: 0 }, feedback: { type: String, default: '' } },
+        projects: { score: { type: Number, default: 0 }, feedback: { type: String, default: '' } },
+        formatting: { score: { type: Number, default: 0 }, feedback: { type: String, default: '' } }
+      },
+      keywords: { type: [String], default: [] },
+      missingKeywords: { type: [String], default: [] },
+      strengths: { type: [String], default: [] },
+      improvements: { type: [String], default: [] }
     }
   },
   { timestamps: true }
 );
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(12);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Resume', resumeSchema);
