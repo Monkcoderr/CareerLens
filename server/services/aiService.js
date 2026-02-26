@@ -26,7 +26,7 @@ const cleanJSON = (text) => {
   }
 };
 
-const generateResponse = async (systemPrompt, userPrompt, temperature, maxTokens) => {
+const generateResponse = async () => {
   const result = await model.generateContent({
     contents: [
       {
