@@ -44,7 +44,7 @@ const generateResponse = async (systemPrompt, userPrompt, temperature, maxTokens
     }
   });
 
-  return result.response.text();
+  return result.response.text(systemPrompt, userPrompt, temperature, maxTokens);
 };
 
 const aiService = {
