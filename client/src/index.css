@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
   margin: 0;
@@ -6,12 +8,16 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+html {
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #030712;
-  color: #ffffff;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F8FAFC;
+  color: #0F172A;
 }
 
 ::-webkit-scrollbar {
@@ -19,20 +25,38 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #F1F5F9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #CBD5E1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #94A3B8;
 }
 
-@layer utilities {
-  .animate-in {
-    animation: slideUp 0.5s ease-out;
+@layer components {
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+  .container-main {
+    @apply max-w-7xl mx-auto px-5 sm:px-6;
+  }
+  .heading-1 {
+    @apply text-4xl md:text-[56px] font-bold leading-[1.1] tracking-[-0.02em] text-txt-primary;
+  }
+  .heading-2 {
+    @apply text-3xl md:text-4xl font-bold text-txt-primary tracking-tight;
+  }
+  .heading-3 {
+    @apply text-lg md:text-[22px] font-semibold text-txt-primary;
+  }
+  .body-large {
+    @apply text-lg text-txt-muted leading-relaxed;
+  }
+  .body-text {
+    @apply text-base text-txt-secondary leading-relaxed;
   }
 }
