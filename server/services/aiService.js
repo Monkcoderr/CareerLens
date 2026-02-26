@@ -48,7 +48,7 @@ const generateResponse = async (systemPrompt, userPrompt, temperature, maxTokens
 };
 
 const aiService = {
-  analyzeResume: async (resumeText, targetRole) => {
+  analyzeResume: async (resumeText, targetRolesystemPrompt, userPrompt, temperature, maxTokens) => {
     const prompt = `You are an expert ATS (Applicant Tracking System) analyzer and career coach. Analyze this resume thoroughly.
 
 ${targetRole ? `Target Role: ${targetRole}` : 'General Analysis'}
