@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import Card from '../ui/Card';
+import Button from '../ui/Button';
 import API from '../../utils/api';
+import { MessageSquare, Send, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 export default function InterviewRoom() {
-  const [config, setConfig] = useState({
-    role: '',
-    type: 'mixed',
-    difficulty: 'medium',
-    questionCount: 5
-  });
+  const [config, setConfig] = useState({ role:'', type:'mixed', difficulty:'medium', questionCount:5 });
   const [interview, setInterview] = useState(null);
   const [currentQ, setCurrentQ] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -18,364 +16,155 @@ export default function InterviewRoom() {
   const [completed, setCompleted] = useState(false);
   const [finalResult, setFinalResult] = useState(null);
 
-  const startInterview = async () => {
-    if (!config.role.trim()) {
-      toast.error('Please enter a target role');
-      return;
-    }
+  const inputClass = 'w-full h-11 px-4 border border-border rounded-xl text-sm text-txt-primary placeholder-txt-light focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition';
+
+  const start = async () => {
+    if (!config.role.trim()) { toast.error('Enter a target role'); return; }
     setLoading(true);
     try {
       const { data } = await API.post('/ai/interview/start', config);
-      setInterview(data);
-      setCurrentQ(0);
-      setAnswer('');
-      setFeedback(null);
-      setCompleted(false);
-      setFinalResult(null);
-      toast.success('Interview started! Good luck 🍀');
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to generate questions');
-    }
+      setInterview(data); setCurrentQ(0); setAnswer(''); setFeedback(null); setCompleted(false); setFinalResult(null);
+      toast.success('Interview started!');
+    } catch (e) { toast.error('Failed to generate questions'); }
     setLoading(false);
   };
 
-  const submitAnswer = async () => {
-    if (!answer.trim()) {
-      toast.error('Please write your answer');
-      return;
-    }
+  const submit = async () => {
+    if (!answer.trim()) { toast.error('Write your answer'); return; }
     setSubmitting(true);
     try {
-      const { data } = await API.post('/ai/interview/answer', {
-        interviewId: interview.interviewId,
-        questionIndex: currentQ,
-        answer: answer.trim()
-      });
+      const { data } = await API.post('/ai/interview/answer', { interviewId:interview.interviewId, questionIndex:currentQ, answer:answer.trim() });
       setFeedback(data);
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to evaluate answer');
-    }
+    } catch (e) { toast.error('Evaluation failed'); }
     setSubmitting(false);
   };
 
-  const nextQuestion = () => {
-    if (currentQ < interview.questions.length - 1) {
-      setCurrentQ(currentQ + 1);
-      setAnswer('');
-      setFeedback(null);
-    } else {
-      completeInterview();
-    }
+  const next = () => {
+    if (currentQ < interview.questions.length - 1) { setCurrentQ(currentQ+1); setAnswer(''); setFeedback(null); }
+    else complete();
   };
 
-  const completeInterview = async () => {
+  const complete = async () => {
     try {
-      const { data } = await API.post('/ai/interview/complete', {
-        interviewId: interview.interviewId
-      });
-      setFinalResult(data);
-      setCompleted(true);
-      toast.success('Interview completed! 🎉');
-    } catch (err) {
-      toast.error('Failed to complete interview');
-    }
+      const { data } = await API.post('/ai/interview/complete', { interviewId:interview.interviewId });
+      setFinalResult(data); setCompleted(true); toast.success('Interview completed!');
+    } catch (e) { toast.error('Failed to complete'); }
   };
 
-  const resetInterview = () => {
-    setInterview(null);
-    setCurrentQ(0);
-    setAnswer('');
-    setFeedback(null);
-    setCompleted(false);
-    setFinalResult(null);
-  };
+  const reset = () => { setInterview(null); setCurrentQ(0); setAnswer(''); setFeedback(null); setCompleted(false); setFinalResult(null); };
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    return 'text-red-400';
-  };
-
-  const getScoreBg = (score) => {
-    if (score >= 80) return 'bg-green-900/50 text-green-400';
-    if (score >= 60) return 'bg-yellow-900/50 text-yellow-400';
-    return 'bg-red-900/50 text-red-400';
-  };
+  const scoreBg = (s) => s>=80?'bg-emerald-50 text-emerald-600':s>=60?'bg-amber-50 text-amber-600':'bg-red-50 text-red-500';
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          🎤 AI Mock Interview
-        </h1>
-        <p className="text-gray-400 mt-2">
-          Practice with AI-generated questions and get instant detailed feedback
-        </p>
+        <h1 className="text-2xl font-bold text-txt-primary flex items-center gap-2"><MessageSquare size={22} className="text-primary-500" /> AI Mock Interview</h1>
+        <p className="text-txt-muted text-sm mt-1">Practice with AI-generated questions and get detailed feedback</p>
       </div>
 
-      {/* Configuration */}
+      {/* Config */}
       {!interview && !completed && (
-        <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-8">
-          <h2 className="text-xl font-semibold text-white mb-6">Configure Your Interview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Target Role *</label>
-              <input
-                type="text"
-                value={config.role}
-                onChange={(e) => setConfig({ ...config, role: e.target.value })}
-                placeholder="e.g., React Developer, Data Engineer..."
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Interview Type</label>
-              <select
-                value={config.type}
-                onChange={(e) => setConfig({ ...config, type: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-all"
-              >
-                <option value="mixed">Mixed (Recommended)</option>
-                <option value="technical">Technical</option>
-                <option value="behavioral">Behavioral</option>
-                <option value="system-design">System Design</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty</label>
-              <select
-                value={config.difficulty}
-                onChange={(e) => setConfig({ ...config, difficulty: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-all"
-              >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Number of Questions</label>
-              <select
-                value={config.questionCount}
-                onChange={(e) => setConfig({ ...config, questionCount: parseInt(e.target.value) })}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-all"
-              >
-                <option value={3}>3 Questions (Quick)</option>
-                <option value={5}>5 Questions (Standard)</option>
-                <option value={8}>8 Questions (Thorough)</option>
-                <option value={10}>10 Questions (Full)</option>
-              </select>
-            </div>
+        <Card className="p-6 lg:p-8">
+          <h2 className="text-lg font-semibold text-txt-primary mb-5">Configure Interview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div><label className="block text-sm font-medium text-txt-secondary mb-1.5">Target Role *</label><input value={config.role} onChange={e=>setConfig({...config,role:e.target.value})} placeholder="e.g., React Developer" className={inputClass} /></div>
+            <div><label className="block text-sm font-medium text-txt-secondary mb-1.5">Type</label><select value={config.type} onChange={e=>setConfig({...config,type:e.target.value})} className={inputClass}><option value="mixed">Mixed</option><option value="technical">Technical</option><option value="behavioral">Behavioral</option><option value="system-design">System Design</option></select></div>
+            <div><label className="block text-sm font-medium text-txt-secondary mb-1.5">Difficulty</label><select value={config.difficulty} onChange={e=>setConfig({...config,difficulty:e.target.value})} className={inputClass}><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+            <div><label className="block text-sm font-medium text-txt-secondary mb-1.5">Questions</label><select value={config.questionCount} onChange={e=>setConfig({...config,questionCount:+e.target.value})} className={inputClass}><option value={3}>3</option><option value={5}>5</option><option value={8}>8</option><option value={10}>10</option></select></div>
           </div>
-
-          <button
-            onClick={startInterview}
-            disabled={loading}
-            className="mt-6 px-8 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25"
-          >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Generating Questions...
-              </>
-            ) : (
-              <>▶ Start Interview</>
-            )}
-          </button>
-        </div>
+          <Button variant="primary" size="lg" className="mt-6" onClick={start} disabled={loading}>
+            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <>Start Interview</>}
+          </Button>
+        </Card>
       )}
 
-      {/* Interview In Progress */}
+      {/* In Progress */}
       {interview && !completed && (
-        <div className="space-y-6 animate-slide-up">
+        <div className="space-y-5 animate-slide-up">
           {/* Progress */}
-          <div className="bg-gray-900/80 border border-gray-800 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-400 text-sm">
-                Question {currentQ + 1} of {interview.questions.length}
-              </span>
-              <span className="text-indigo-400 text-sm font-medium">
-                {Math.round(((currentQ + (feedback ? 1 : 0)) / interview.questions.length) * 100)}% complete
-              </span>
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-txt-muted">Question {currentQ+1} / {interview.questions.length}</span>
+              <span className="text-xs font-medium text-primary-500">{Math.round(((currentQ+(feedback?1:0))/interview.questions.length)*100)}%</span>
             </div>
-            <div className="w-full bg-gray-800 rounded-full h-2.5">
-              <div
-                className="h-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-700 ease-out"
-                style={{ width: `${((currentQ + (feedback ? 1 : 0)) / interview.questions.length) * 100}%` }}
-              ></div>
-            </div>
-          </div>
+            <div className="w-full bg-slate-100 rounded-full h-2"><div className="h-2 rounded-full bg-primary-500 transition-all duration-500" style={{width:`${((currentQ+(feedback?1:0))/interview.questions.length)*100}%`}}></div></div>
+          </Card>
 
           {/* Question */}
-          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-8">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                {currentQ + 1}
-              </div>
-              <h3 className="text-lg text-white font-medium leading-relaxed">
-                {interview.questions[currentQ].question}
-              </h3>
+          <Card className="p-6 lg:p-8">
+            <div className="flex items-start gap-3 mb-6">
+              <div className="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center text-primary-600 text-sm font-bold flex-shrink-0">{currentQ+1}</div>
+              <h3 className="text-base font-medium text-txt-primary leading-relaxed">{interview.questions[currentQ].question}</h3>
             </div>
 
-            {interview.questions[currentQ].keyPoints && interview.questions[currentQ].keyPoints.length > 0 && (
-              <div className="mb-6 flex flex-wrap gap-2">
-                {interview.questions[currentQ].keyPoints.map((point, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-indigo-900/30 text-indigo-400 rounded-lg text-xs border border-indigo-800/50">
-                    💡 {point}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Answer Input */}
             {!feedback && (
               <div>
-                <textarea
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="Type your answer here... Be detailed and specific. Explain your thought process."
-                  rows={8}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-none"
-                />
+                <textarea value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Type your answer..." rows={7}
+                  className="w-full px-4 py-3 border border-border rounded-xl text-sm text-txt-primary placeholder-txt-light focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition resize-none" />
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-gray-500 text-sm">{answer.length} characters</span>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={resetInterview}
-                      className="px-4 py-2.5 bg-gray-800 text-gray-400 rounded-xl hover:text-white hover:bg-gray-700 transition-all text-sm"
-                    >
-                      Exit Interview
-                    </button>
-                    <button
-                      onClick={submitAnswer}
-                      disabled={submitting || !answer.trim()}
-                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {submitting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Evaluating...
-                        </>
-                      ) : (
-                        <>Submit Answer →</>
-                      )}
-                    </button>
+                  <span className="text-xs text-txt-light">{answer.length} chars</span>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={reset}>Exit</Button>
+                    <Button variant="primary" size="md" onClick={submit} disabled={submitting||!answer.trim()}>
+                      {submitting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Send size={14} /> Submit</>}
+                    </Button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Feedback */}
             {feedback && (
               <div className="space-y-4 animate-slide-up">
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-800/50 border border-gray-700">
-                  <div className={`text-4xl font-bold ${getScoreColor(feedback.score || 0)}`}>
-                    {feedback.score || 0}%
-                  </div>
-                  <p className="text-gray-300 text-sm leading-relaxed">{feedback.feedback}</p>
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border">
+                  <span className={`text-3xl font-bold ${(feedback.score||0)>=80?'text-emerald-500':(feedback.score||0)>=60?'text-amber-500':'text-red-500'}`}>{feedback.score||0}%</span>
+                  <p className="text-sm text-txt-secondary">{feedback.feedback}</p>
                 </div>
-
-                {feedback.strengths && feedback.strengths.length > 0 && (
-                  <div className="p-4 bg-green-900/20 border border-green-800/30 rounded-xl">
-                    <h4 className="text-green-400 font-medium text-sm mb-2">✅ What you did well:</h4>
-                    <ul className="space-y-1.5">
-                      {feedback.strengths.map((s, i) => (
-                        <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
-                          <span className="text-green-400 mt-0.5">•</span>
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
+                {feedback.strengths?.length>0 && (
+                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <h4 className="text-xs font-semibold text-emerald-700 mb-2">✅ Strengths</h4>
+                    <ul className="space-y-1">{feedback.strengths.map((s,i)=><li key={i} className="text-sm text-emerald-700 flex items-start gap-1.5"><CheckCircle2 size={14} className="mt-0.5 flex-shrink-0"/>{s}</li>)}</ul>
                   </div>
                 )}
-
-                {feedback.improvements && feedback.improvements.length > 0 && (
-                  <div className="p-4 bg-amber-900/20 border border-amber-800/30 rounded-xl">
-                    <h4 className="text-amber-400 font-medium text-sm mb-2">⚡ To improve:</h4>
-                    <ul className="space-y-1.5">
-                      {feedback.improvements.map((s, i) => (
-                        <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
-                          <span className="text-amber-400 mt-0.5">•</span>
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
                 {feedback.idealAnswer && (
-                  <div className="p-4 bg-indigo-900/20 border border-indigo-800/30 rounded-xl">
-                    <h4 className="text-indigo-400 font-medium text-sm mb-2">💡 Ideal Answer:</h4>
-                    <p className="text-gray-300 text-sm leading-relaxed">{feedback.idealAnswer}</p>
+                  <div className="p-4 bg-primary-50 rounded-xl border border-primary-100">
+                    <h4 className="text-xs font-semibold text-primary-700 mb-2">💡 Ideal Answer</h4>
+                    <p className="text-sm text-primary-800">{feedback.idealAnswer}</p>
                   </div>
                 )}
-
-                <button
-                  onClick={nextQuestion}
-                  className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25"
-                >
-                  {currentQ < interview.questions.length - 1 ? 'Next Question →' : 'Complete Interview ✓'}
-                </button>
+                <Button variant="primary" size="lg" className="w-full" onClick={next}>
+                  {currentQ < interview.questions.length-1 ? 'Next Question →' : 'Complete Interview ✓'}
+                </Button>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Completed */}
       {completed && finalResult && (
         <div className="space-y-6 animate-slide-up">
-          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-8 text-center">
-            <div className="text-6xl mb-4">
-              {finalResult.overallScore >= 80 ? '🏆' : finalResult.overallScore >= 60 ? '👍' : '💪'}
-            </div>
-            <div className={`text-6xl font-bold mb-4 ${getScoreColor(finalResult.overallScore || 0)}`}>
-              {finalResult.overallScore || 0}%
-            </div>
-            <h2 className="text-2xl font-bold text-white">Interview Complete!</h2>
-            <p className="text-gray-400 mt-2 max-w-lg mx-auto">{finalResult.feedback}</p>
-            <p className="text-gray-500 text-sm mt-2">
-              Answered {finalResult.totalAnswered || 0} of {finalResult.totalQuestions || 0} questions
-            </p>
-
-            <button
-              onClick={resetInterview}
-              className="mt-6 px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all inline-flex items-center gap-2 shadow-lg shadow-indigo-500/25"
-            >
-              🔄 Start New Interview
-            </button>
-          </div>
-
-          {/* Review All Questions */}
-          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">📝 Question Review</h3>
-            <div className="space-y-4">
-              {(finalResult.questions || []).map((q, i) => (
-                <div key={i} className="bg-gray-800/40 rounded-xl p-5 border border-gray-700/50">
-                  <div className="flex items-start justify-between mb-3">
-                    <h4 className="text-white font-medium text-sm flex-1 pr-4">
-                      <span className="text-indigo-400">Q{i + 1}:</span> {q.question}
-                    </h4>
-                    <span className={`text-sm font-bold px-3 py-1 rounded-lg flex-shrink-0 ${getScoreBg(q.score || 0)}`}>
-                      {q.score || 0}%
-                    </span>
+          <Card className="p-8 text-center">
+            <span className="text-5xl block mb-3">{(finalResult.overallScore||0)>=80?'🏆':(finalResult.overallScore||0)>=60?'👍':'💪'}</span>
+            <p className={`text-5xl font-bold mb-3 ${(finalResult.overallScore||0)>=80?'text-emerald-500':(finalResult.overallScore||0)>=60?'text-amber-500':'text-red-500'}`}>{finalResult.overallScore||0}%</p>
+            <h2 className="text-xl font-bold text-txt-primary">Interview Complete!</h2>
+            <p className="text-sm text-txt-muted mt-2 max-w-md mx-auto">{finalResult.feedback}</p>
+            <Button variant="primary" size="lg" className="mt-6" onClick={reset}><RotateCcw size={16} /> New Interview</Button>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-sm font-semibold text-txt-primary mb-4">Question Review</h3>
+            <div className="space-y-3">
+              {(finalResult.questions||[]).map((q,i) => (
+                <div key={i} className="p-4 bg-surface rounded-xl border border-border">
+                  <div className="flex items-start justify-between mb-2">
+                    <p className="text-sm font-medium text-txt-primary flex-1 pr-3"><span className="text-primary-500">Q{i+1}:</span> {q.question}</p>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${scoreBg(q.score||0)}`}>{q.score||0}%</span>
                   </div>
-                  {q.userAnswer && (
-                    <div className="mb-2">
-                      <p className="text-gray-500 text-xs font-medium mb-1">Your Answer:</p>
-                      <p className="text-gray-400 text-sm">{q.userAnswer}</p>
-                    </div>
-                  )}
-                  {q.aiFeedback && (
-                    <div className="mt-2 pt-2 border-t border-gray-700/50">
-                      <p className="text-gray-500 text-xs font-medium mb-1">AI Feedback:</p>
-                      <p className="text-indigo-300 text-sm">{q.aiFeedback}</p>
-                    </div>
-                  )}
+                  {q.userAnswer && <p className="text-xs text-txt-muted mb-1"><strong>You:</strong> {q.userAnswer}</p>}
+                  {q.aiFeedback && <p className="text-xs text-primary-600"><strong>AI:</strong> {q.aiFeedback}</p>}
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </div>

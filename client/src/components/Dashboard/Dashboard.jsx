@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Card from '../ui/Card';
+import Button from '../ui/Button';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import API from '../../utils/api';
+import {
+  FileText, MessageSquare, Target, Briefcase,
+  ArrowRight, TrendingUp,
+} from 'lucide-react';
 
-const COLORS = ['#6366f1', '#a855f7', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4'];
+const COLORS = ['#2563EB', '#6366F1', '#10B981', '#F59E0B', '#EF4444', '#06B6D4'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -17,281 +23,193 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetch = async () => {
       try {
-        const [jobRes, interviewRes] = await Promise.allSettled([
+        const [j, i] = await Promise.allSettled([
           API.get('/jobs/stats/overview'),
-          API.get('/ai/interview/history')
+          API.get('/ai/interview/history'),
         ]);
-
-        if (jobRes.status === 'fulfilled') setJobStats(jobRes.value.data);
-        if (interviewRes.status === 'fulfilled') setInterviews(interviewRes.value.data);
-      } catch (err) {
-        console.error('Dashboard fetch error:', err);
-      }
+        if (j.status === 'fulfilled') setJobStats(j.value.data);
+        if (i.status === 'fulfilled') setInterviews(i.value.data);
+      } catch (e) { console.error(e); }
       setLoading(false);
     };
-    fetchData();
+    fetch();
   }, []);
 
-  const statCards = [
-    {
-      label: 'Resume Score',
-      value: `${user?.resumeScore || 0}%`,
-      desc: 'ATS compatibility score',
-      gradient: 'from-blue-600 to-cyan-600',
-      bg: 'bg-blue-500/10',
-      action: () => navigate('/resume')
-    },
-    {
-      label: 'Interviews Done',
-      value: user?.interviewsTaken || 0,
-      desc: 'Mock sessions completed',
-      gradient: 'from-purple-600 to-pink-600',
-      bg: 'bg-purple-500/10',
-      action: () => navigate('/interview')
-    },
-    {
-      label: 'Avg. Score',
-      value: `${user?.avgInterviewScore || 0}%`,
-      desc: 'Interview performance',
-      gradient: 'from-green-600 to-emerald-600',
-      bg: 'bg-green-500/10',
-      action: () => navigate('/interview')
-    },
-    {
-      label: 'Jobs Tracked',
-      value: jobStats.total || 0,
-      desc: 'Total applications',
-      gradient: 'from-orange-600 to-amber-600',
-      bg: 'bg-orange-500/10',
-      action: () => navigate('/jobs')
-    }
+  const stats = [
+    { label: 'Resume Score', value: `${user?.resumeScore || 0}%`, icon: FileText, color: 'text-primary-500', bg: 'bg-primary-50', to: '/dashboard/resume' },
+    { label: 'Interviews', value: user?.interviewsTaken || 0, icon: MessageSquare, color: 'text-indigo-500', bg: 'bg-indigo-50', to: '/dashboard/interview' },
+    { label: 'Avg Score', value: `${user?.avgInterviewScore || 0}%`, icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-50', to: '/dashboard/interview' },
+    { label: 'Jobs Tracked', value: jobStats.total || 0, icon: Briefcase, color: 'text-amber-500', bg: 'bg-amber-50', to: '/dashboard/jobs' },
   ];
 
-  const interviewChartData = interviews
-    .filter((i) => i.completedAt)
-    .slice(0, 8)
-    .reverse()
-    .map((i, idx) => ({
-      name: `Session ${idx + 1}`,
-      score: i.overallScore || 0,
-      role: i.role
-    }));
+  const chartData = interviews.filter(i => i.completedAt).slice(0, 8).reverse().map((i, idx) => ({
+    name: `#${idx + 1}`, score: i.overallScore || 0,
+  }));
 
-  const jobPieData = jobStats.stats.map((s) => ({
-    name: s._id.charAt(0).toUpperCase() + s._id.slice(1),
-    value: s.count
+  const pieData = jobStats.stats.map(s => ({
+    name: s._id.charAt(0).toUpperCase() + s._id.slice(1), value: s.count,
   }));
 
   const quickActions = [
-    { label: 'Analyze Resume', desc: 'Get AI-powered resume feedback', path: '/resume', emoji: '📄' },
-    { label: 'Mock Interview', desc: 'Practice with AI interviewer', path: '/interview', emoji: '🎤' },
-    { label: 'Cover Letter', desc: 'Generate tailored cover letters', path: '/cover-letter', emoji: '✉️' },
-    { label: 'Track Jobs', desc: 'Manage your applications', path: '/jobs', emoji: '💼' }
+    { label: 'Analyze Resume', desc: 'Get AI-powered feedback', path: '/dashboard/resume', emoji: '📄' },
+    { label: 'Mock Interview', desc: 'Practice with AI', path: '/dashboard/interview', emoji: '🎤' },
+    { label: 'Cover Letter', desc: 'Generate tailored letters', path: '/dashboard/cover-letter', emoji: '✉️' },
+    { label: 'Track Jobs', desc: 'Manage applications', path: '/dashboard/jobs', emoji: '💼' },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-80">
+      <div className="w-8 h-8 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-white">
-            Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
+          <h1 className="text-2xl font-bold text-txt-primary">
+            Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
           </h1>
-          <p className="text-gray-400 mt-1">Here's your career preparation overview</p>
+          <p className="text-txt-muted text-sm mt-1">Here's your career preparation overview</p>
         </div>
         {user?.targetRole && (
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-xl border border-indigo-500/30">
-            <span className="text-yellow-400">🎯</span>
-            <span className="text-indigo-300 font-medium text-sm">{user.targetRole}</span>
+          <div className="flex items-center gap-2 px-3.5 py-2 bg-primary-50 rounded-xl border border-primary-100">
+            <Target size={14} className="text-primary-500" />
+            <span className="text-primary-600 text-sm font-medium">{user.targetRole}</span>
           </div>
         )}
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {statCards.map((stat, idx) => (
-          <button
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s, idx) => (
+          <Card
             key={idx}
-            onClick={stat.action}
-            className="text-left bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 hover:border-gray-700 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 group"
+            hover
+            className="p-5 cursor-pointer"
+            onClick={() => navigate(s.to)}
           >
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-              <span className="text-white text-lg font-bold">
-                {stat.label[0]}
-              </span>
+            <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center mb-3`}>
+              <s.icon size={18} className={s.color} />
             </div>
-            <h3 className="text-3xl font-bold text-white">{stat.value}</h3>
-            <p className="text-gray-400 text-sm mt-1">{stat.label}</p>
-            <p className="text-gray-600 text-xs mt-0.5">{stat.desc}</p>
-          </button>
+            <p className="text-2xl font-bold text-txt-primary">{s.value}</p>
+            <p className="text-sm text-txt-muted mt-0.5">{s.label}</p>
+          </Card>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">⚡ Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action) => (
+      <Card className="p-6">
+        <h3 className="text-sm font-semibold text-txt-primary mb-4 flex items-center gap-2">
+          <TrendingUp size={16} className="text-primary-500" /> Quick Actions
+        </h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {quickActions.map(a => (
             <button
-              key={action.path}
-              onClick={() => navigate(action.path)}
-              className="flex items-center gap-4 p-4 bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 hover:border-gray-600 rounded-xl transition-all duration-200 group text-left"
+              key={a.path}
+              onClick={() => navigate(a.path)}
+              className="flex items-center gap-3 p-3.5 bg-surface rounded-xl border border-border hover:border-primary-200 hover:bg-primary-50/30 transition-all group text-left"
             >
-              <span className="text-2xl">{action.emoji}</span>
+              <span className="text-xl">{a.emoji}</span>
               <div>
-                <p className="text-white font-medium text-sm group-hover:text-indigo-300 transition-colors">
-                  {action.label}
-                </p>
-                <p className="text-gray-500 text-xs mt-0.5">{action.desc}</p>
+                <p className="text-sm font-medium text-txt-primary group-hover:text-primary-600 transition">{a.label}</p>
+                <p className="text-xs text-txt-light">{a.desc}</p>
               </div>
             </button>
           ))}
         </div>
-      </div>
+      </Card>
 
-      {/* Charts Section */}
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Interview Progress */}
-        <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">📈 Interview Progress</h3>
-          {interviewChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={interviewChartData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
-                <YAxis stroke="#9CA3AF" domain={[0, 100]} fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    background: '#1F2937',
-                    border: '1px solid #374151',
-                    borderRadius: '12px',
-                    color: '#fff'
-                  }}
-                />
-                <Bar dataKey="score" radius={[8, 8, 0, 0]} maxBarSize={50}>
-                  {interviewChartData.map((entry, index) => (
-                    <Cell key={index} fill={entry.score >= 70 ? '#22c55e' : entry.score >= 50 ? '#f59e0b' : '#ef4444'} />
+        <Card className="p-6">
+          <h3 className="text-sm font-semibold text-txt-primary mb-5">Interview Progress</h3>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="name" stroke="#94A3B8" fontSize={12} />
+                <YAxis stroke="#94A3B8" fontSize={12} domain={[0, 100]} />
+                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '13px' }} />
+                <Bar dataKey="score" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                  {chartData.map((_, i) => (
+                    <Cell key={i} fill={chartData[i].score >= 70 ? '#10B981' : chartData[i].score >= 50 ? '#F59E0B' : '#EF4444'} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex flex-col items-center justify-center h-[280px] text-gray-500">
-              <span className="text-4xl mb-3">🎤</span>
-              <p>Take your first mock interview!</p>
-              <button
-                onClick={() => navigate('/interview')}
-                className="mt-3 px-4 py-2 bg-indigo-600/20 text-indigo-400 rounded-lg hover:bg-indigo-600/30 transition text-sm"
-              >
-                Start Interview →
-              </button>
+            <div className="flex flex-col items-center justify-center h-[240px]">
+              <span className="text-3xl mb-2">🎤</span>
+              <p className="text-txt-muted text-sm mb-3">No interviews yet</p>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/dashboard/interview')}>
+                Start First Interview <ArrowRight size={14} />
+              </Button>
             </div>
           )}
-        </div>
+        </Card>
 
-        {/* Job Application Status */}
-        <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">💼 Application Status</h3>
-          {jobPieData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={jobPieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {jobPieData.map((entry, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: '#1F2937',
-                    border: '1px solid #374151',
-                    borderRadius: '12px',
-                    color: '#fff'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+        <Card className="p-6">
+          <h3 className="text-sm font-semibold text-txt-primary mb-5">Application Status</h3>
+          {pieData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
+                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '13px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-3 mt-2 justify-center">
+                {pieData.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                    <span className="text-xs text-txt-muted">{item.name} ({item.value})</span>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-[280px] text-gray-500">
-              <span className="text-4xl mb-3">💼</span>
-              <p>Start tracking your job applications!</p>
-              <button
-                onClick={() => navigate('/jobs')}
-                className="mt-3 px-4 py-2 bg-indigo-600/20 text-indigo-400 rounded-lg hover:bg-indigo-600/30 transition text-sm"
-              >
-                Add Job →
-              </button>
+            <div className="flex flex-col items-center justify-center h-[240px]">
+              <span className="text-3xl mb-2">💼</span>
+              <p className="text-txt-muted text-sm mb-3">No jobs tracked yet</p>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/dashboard/jobs')}>
+                Add First Job <ArrowRight size={14} />
+              </Button>
             </div>
           )}
-          {jobPieData.length > 0 && (
-            <div className="flex flex-wrap gap-3 mt-4 justify-center">
-              {jobPieData.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
-                  <span className="text-gray-400 text-xs">{item.name}: {item.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        </Card>
       </div>
 
       {/* Recent Interviews */}
       {interviews.length > 0 && (
-        <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">🕐 Recent Interviews</h3>
-          <div className="space-y-3">
-            {interviews.slice(0, 5).map((interview) => (
-              <div key={interview._id} className="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl hover:bg-gray-800/60 transition">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold ${
-                      (interview.overallScore || 0) >= 80
-                        ? 'bg-green-900/50 text-green-400'
-                        : (interview.overallScore || 0) >= 60
-                        ? 'bg-yellow-900/50 text-yellow-400'
-                        : 'bg-red-900/50 text-red-400'
-                    }`}
-                  >
-                    {interview.overallScore || 0}%
-                  </div>
+        <Card className="p-6">
+          <h3 className="text-sm font-semibold text-txt-primary mb-4">Recent Interviews</h3>
+          <div className="space-y-2">
+            {interviews.slice(0, 5).map(iv => (
+              <div key={iv._id} className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-border-light hover:border-border transition">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold ${
+                    (iv.overallScore||0)>=80?'bg-emerald-50 text-emerald-600':
+                    (iv.overallScore||0)>=60?'bg-amber-50 text-amber-600':'bg-red-50 text-red-500'
+                  }`}>{iv.overallScore||0}%</div>
                   <div>
-                    <p className="text-white font-medium text-sm">{interview.role}</p>
-                    <p className="text-gray-500 text-xs mt-0.5">
-                      {interview.type} • {interview.difficulty} •{' '}
-                      {interview.questions?.length || 0} questions
-                    </p>
+                    <p className="text-sm font-medium text-txt-primary">{iv.role}</p>
+                    <p className="text-xs text-txt-light">{iv.type} · {iv.difficulty}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-gray-500 text-xs">
-                    {new Date(interview.createdAt).toLocaleDateString()}
-                  </span>
-                  {interview.completedAt && (
-                    <p className="text-green-500 text-xs mt-0.5">✓ Completed</p>
-                  )}
+                  <p className="text-xs text-txt-light">{new Date(iv.createdAt).toLocaleDateString()}</p>
+                  {iv.completedAt && <p className="text-xs text-emerald-500 font-medium">✓ Done</p>}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
