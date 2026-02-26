@@ -26,10 +26,10 @@ exports.register = async (req, res , next) => {
       return res.status(400).json({ error: 'Please provide name, email, and password' });
     }
 
-    const userExists = await User.findOne({ email: email.toLowerCase() });
-    if (userExists) {
-      return res.status(400).json({ error: 'An account with this email already exists' });
-    }
+    // const userExists = await User.findOne({ email: email.toLowerCase() });
+    // if (userExists) {
+    //   return res.status(400).json({ error: 'An account with this email already exists' });
+    // }
 
     const user = await User.create({
       name,
