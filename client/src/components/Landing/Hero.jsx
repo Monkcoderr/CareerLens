@@ -13,62 +13,53 @@ export default function Hero() {
   const { user } = useAuth();
 
   return (
-    <section className="bg-surface min-h-[85vh] flex items-center">
-      <div className="container-main w-full section-padding">
-        <div className="max-w-3xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-primary-50 text-primary-500 px-4 py-1.5 rounded-full text-sm font-medium mb-8 animate-fade-in">
-            <Zap size={14} />
-            <span>Powered by Advanced AI</span>
+    <section className="hero-gradient pt-28 pb-20 md:pt-36 md:pb-32 overflow-hidden">
+      <div className="container-main">
+        <div className="max-w-[800px] mx-auto text-center">
+          {/* Pill Badge */}
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-100 text-primary-500 text-sm font-semibold mb-8 animate-fade-in shadow-soft">
+            AI-Powered Career Intelligence
           </div>
 
-          {/* Headline */}
-          <h1 className="heading-1 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            The Professional Way to{' '}
-            <br className="hidden sm:block" />
-            <span className="text-primary-500">Build & Advance</span> Your Career
+          {/* H1 Headline */}
+          <h1 className="h1 text-txt-primary mb-8 animate-slide-up">
+            Land Your <span className="text-primary-500">Dream Role</span> <br className="hidden md:block" />
+            Without the Stress.
           </h1>
 
           {/* Subtext */}
-          <p
-            className="body-large max-w-xl mx-auto mb-10 animate-slide-up"
-            style={{ animationDelay: '0.2s' }}
-          >
-            Analyze your resume with AI, practice mock interviews, generate
-            tailored cover letters, and track every application — all in one platform.
+          <p className="body-large mb-12 animate-slide-up delay-100">
+            AI resume analysis, tailored cover letters, mock interviews, and live job market insights — all in one platform designed for high-achievers.
           </p>
 
-          {/* CTA Buttons */}
-          <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12 animate-slide-up"
-            style={{ animationDelay: '0.3s' }}
-          >
-            <Link to={user ? '/dashboard' : '/register'}>
-              <Button variant="primary" size="xl" className="shadow-hero">
-                {user ? 'Go to Dashboard' : 'Get Started Free'}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16 animate-slide-up delay-200">
+            <Link to={user ? "/dashboard" : "/register"}>
+              <Button variant="primary" size="lg" className="text-[15px]">
+                {user ? "Go to Dashboard" : "Start For Free"}
               </Button>
             </Link>
-            <a href="#features">
-              <Button variant="secondary" size="xl">
-                See How It Works
-              </Button>
+            <a href="#features" className="text-[15px] font-semibold text-txt-muted hover:text-primary-500 transition-colors flex items-center gap-1.5">
+              See how it works
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
             </a>
           </div>
 
-          {/* Trust Badges */}
-          <div
-            className="flex flex-wrap items-center justify-center gap-6 animate-slide-up"
-            style={{ animationDelay: '0.4s' }}
-          >
-            {trustBadges.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-2 text-txt-muted text-sm">
-                <Icon size={16} className="text-primary-500" />
-                <span>{label}</span>
-              </div>
-            ))}
+          {/* Social Proof */}
+          <div className="animate-fade-in delay-300">
+            <p className="text-[13px] font-semibold text-txt-muted uppercase tracking-widest mb-8">
+              Trusted by users at world-class companies
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 grayscale">
+              {/* Using generic placeholders for logos */}
+              <div className="text-xl font-bold">GOOGLE</div>
+              <div className="text-xl font-bold">META</div>
+              <div className="text-xl font-bold">STRIPE</div>
+              <div className="text-xl font-bold">AIRBNB</div>
+              <div className="text-xl font-bold">AMAZON</div>
+            </div>
           </div>
         </div>
       </div>

@@ -7,7 +7,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
-import { Upload, CheckCircle2, AlertTriangle, Search } from 'lucide-react';
+import { Upload, CheckCircle2, AlertTriangle, Search, FileText, Sparkles, XCircle } from 'lucide-react';
 
 export default function ResumeUpload() {
   const [analysis, setAnalysis] = useState(null);
@@ -25,120 +25,156 @@ export default function ResumeUpload() {
       const { data } = await API.post('/resume/analyze', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 });
       setAnalysis(data.analysis);
       updateUser({ resumeScore: data.analysis.overallScore });
-      toast.success('Resume analyzed!');
+      toast.success('Resume analyzed successfully!');
     } catch (err) { toast.error(err.response?.data?.error || 'Analysis failed'); }
     setLoading(false);
   }, [targetRole, updateUser]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop, accept: { 'application/pdf': ['.pdf'] }, maxFiles: 1, maxSize: 5*1024*1024, disabled: loading,
+    onDrop, accept: { 'application/pdf': ['.pdf'] }, maxFiles: 1, maxSize: 5 * 1024 * 1024, disabled: loading,
   });
 
-  const scoreColor = (s) => s >= 80 ? '#10B981' : s >= 60 ? '#F59E0B' : '#EF4444';
-  const scoreBg = (s) => s >= 80 ? 'bg-emerald-50 text-emerald-600' : s >= 60 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500';
+  const scoreColor = (s) => s >= 80 ? '#10B981' : s >= 60 ? '#2563EB' : '#EF4444';
+  const scoreBgColor = (s) => s >= 80 ? 'bg-emerald-50 text-emerald-600' : s >= 60 ? 'bg-primary-50 text-primary-600' : 'bg-red-50 text-red-500';
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-txt-primary flex items-center gap-2">
-          <Search size={22} className="text-primary-500" /> AI Resume Analyzer
-        </h1>
-        <p className="text-txt-muted text-sm mt-1">Upload your resume for instant AI-powered ATS analysis</p>
+    <div className="max-w-5xl mx-auto space-y-10 animate-fade-in pb-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="h2 text-txt-primary flex items-center gap-3">
+            Resume Intelligence <span className="p-1 px-3 bg-primary-900 text-white rounded-full text-[12px] font-bold uppercase tracking-widest flex items-center gap-1.5"><Sparkles size={12} fill="currentColor" /> AI Powered</span>
+          </h1>
+          <p className="body-large mt-2">Upload your resume to see how you rank against ATS algorithms.</p>
+        </div>
       </div>
 
-      <Card className="p-6">
-        <label className="block text-sm font-medium text-txt-secondary mb-1.5">Target Role</label>
-        <input type="text" value={targetRole} onChange={e => setTargetRole(e.target.value)}
-          placeholder="e.g., Full Stack Developer, Product Manager..."
-          className="w-full h-11 px-4 border border-border rounded-xl text-sm text-txt-primary placeholder-txt-light focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition" />
-      </Card>
-
-      <div {...getRootProps()} className={`border-2 border-dashed rounded-3xl p-16 text-center cursor-pointer transition-all ${loading ? 'border-primary-300 bg-primary-50/30 cursor-wait' : isDragActive ? 'border-primary-500 bg-primary-50/50 scale-[1.01]' : 'border-slate-300 hover:border-primary-400 bg-white'}`}>
-        <input {...getInputProps()} />
-        {loading ? (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-primary-600 font-medium">Analyzing with AI...</p>
-            <p className="text-txt-light text-sm">This may take 15-30 seconds</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-primary-50 flex items-center justify-center"><Upload size={24} className="text-primary-500" /></div>
-            <p className="text-txt-primary font-medium">{isDragActive ? 'Drop your resume' : 'Drag & drop your resume'}</p>
-            <p className="text-txt-light text-sm">or click to browse · PDF only · Max 5 MB</p>
-          </div>
-        )}
-      </div>
-
-      {analysis && (
-        <div className="space-y-6 animate-slide-up">
-          {/* Score */}
-          <Card className="p-8">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="w-32 h-32 flex-shrink-0">
-                <CircularProgressbar value={analysis.overallScore||0} text={`${analysis.overallScore||0}%`}
-                  styles={buildStyles({ textColor:'#0F172A', textSize:'22px', pathColor:scoreColor(analysis.overallScore||0), trailColor:'#E2E8F0', pathTransitionDuration:1.5 })} />
-              </div>
-              <div className="text-center md:text-left">
-                <h2 className="text-xl font-bold text-txt-primary">Overall Resume Score</h2>
-                <div className="flex items-center gap-3 mt-2 justify-center md:justify-start">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${scoreBg(analysis.atsCompatibility||0)}`}>ATS: {analysis.atsCompatibility||0}%</span>
-                </div>
-                <p className="text-sm text-txt-muted mt-3 max-w-md">
-                  {(analysis.overallScore||0) >= 80 ? '🎉 Excellent! Your resume is well-optimized.' : (analysis.overallScore||0) >= 60 ? '⚡ Good start! Some improvements can boost your score.' : '🔧 Follow the suggestions below to improve.'}
-                </p>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="p-8 border-0 shadow-soft bg-white">
+            <label className="text-[13px] font-bold text-txt-primary uppercase tracking-widest mb-4 block">Target Job Title</label>
+            <div className="relative">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted" />
+              <input
+                type="text"
+                value={targetRole}
+                onChange={e => setTargetRole(e.target.value)}
+                placeholder="e.g. Senior Product Manager"
+                className="w-full h-[52px] pl-12 pr-5 border border-border rounded-xl text-txt-primary font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+              />
             </div>
+            <p className="text-[11px] text-txt-muted mt-4 font-medium italic">Keywords will be tailored to this specific role for better accuracy.</p>
           </Card>
 
-          {/* Section Scores */}
-          {analysis.sections && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(analysis.sections).map(([key, sec]) => (
-                <Card key={key} className="p-5">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <h3 className="text-sm font-semibold text-txt-primary capitalize">{key}</h3>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${scoreBg(sec.score||0)}`}>{sec.score||0}%</span>
+          <div {...getRootProps()} className={`relative group h-[260px] rounded-[20px] border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center p-8 text-center cursor-pointer ${loading ? 'border-primary-300 bg-primary-50/20' : isDragActive ? 'border-primary-500 bg-primary-50/50' : 'border-slate-300 hover:border-primary-500 hover:bg-white shadow-soft group-hover:shadow-heavy'}`}>
+            <input {...getInputProps()} />
+            {loading ? (
+              <div className="space-y-4">
+                <div className="w-12 h-12 border-[4px] border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p className="font-bold text-primary-900 tracking-tight">AI is analyzing...</p>
+              </div>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary-500 group-hover:text-white transition-all duration-300">
+                  <Upload size={28} />
+                </div>
+                <p className="text-txt-primary font-bold">{isDragActive ? 'Drop files here' : 'Drop your Resume'}</p>
+                <p className="text-[12px] text-txt-muted font-semibold mt-1 uppercase tracking-wider">PDF only • Max 5MB</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-2">
+          {analysis ? (
+            <div className="space-y-8 animate-slide-up">
+              <Card className="p-8 border-0 shadow-soft bg-white">
+                <div className="flex flex-col md:flex-row items-center gap-10">
+                  <div className="w-40 h-40 flex-shrink-0 relative">
+                    <CircularProgressbar
+                      value={analysis.overallScore || 0}
+                      text={`${analysis.overallScore || 0}%`}
+                      styles={buildStyles({
+                        textColor: '#0F172A',
+                        textSize: '24px',
+                        pathColor: scoreColor(analysis.overallScore || 0),
+                        trailColor: '#F1F5F9',
+                        pathTransitionDuration: 2
+                      })}
+                    />
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2.5"><div className="h-1.5 rounded-full transition-all duration-1000" style={{ width:`${sec.score||0}%`, backgroundColor:scoreColor(sec.score||0) }}></div></div>
-                  <p className="text-xs text-txt-muted leading-relaxed">{sec.feedback || 'No feedback'}</p>
+                  <div className="flex-1 text-center md:text-left">
+                    <h2 className="text-2xl font-bold text-txt-primary mb-3">Matching Score</h2>
+                    <p className="text-txt-muted text-[15px] leading-relaxed mb-6">
+                      Your resume has been analyzed across 4 core dimensions including Formatting, Impact, and Keyword Density.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start">
+                      <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-widest ${scoreBgColor(analysis.overallScore)}`}>
+                        Score: {analysis.overallScore >= 80 ? 'Excellent' : analysis.overallScore >= 60 ? 'Good' : 'Needs Work'}
+                      </span>
+                      <span className="px-4 py-1.5 bg-slate-100 text-txt-primary rounded-full text-[12px] font-bold uppercase tracking-widest">
+                        ATS Ready: Yes
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="p-8 border-0 shadow-soft bg-white">
+                  <h3 className="text-[13px] font-bold text-emerald-600 uppercase tracking-widest mb-6 flex items-center gap-2"><CheckCircle2 size={16} /> Key Strengths</h3>
+                  <ul className="space-y-4">
+                    {analysis.strengths?.map((s, i) => (
+                      <li key={i} className="flex gap-3 text-sm font-semibold text-txt-primary leading-tight">
+                        <span className="text-emerald-500 font-bold shrink-0">✓</span> {s}
+                      </li>
+                    ))}
+                  </ul>
                 </Card>
-              ))}
+                <Card className="p-8 border-0 shadow-soft bg-white">
+                  <h3 className="text-[13px] font-bold text-amber-600 uppercase tracking-widest mb-6 flex items-center gap-2"><AlertTriangle size={16} /> Areas for Growth</h3>
+                  <ul className="space-y-4">
+                    {analysis.improvements?.map((s, i) => (
+                      <li key={i} className="flex gap-3 text-sm font-semibold text-txt-primary leading-tight">
+                        <span className="text-amber-500 font-bold shrink-0">→</span> {s}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              </div>
+
+              <Card className="p-8 border-0 shadow-soft bg-white">
+                <h3 className="text-[13px] font-bold text-txt-primary uppercase tracking-widest mb-8 flex items-center gap-2">🔍 Strategic Keyword Matches</h3>
+                <div className="space-y-8">
+                  <div>
+                    <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest mb-4">Found in your Resume</p>
+                    <div className="flex flex-wrap gap-2">
+                      {analysis.keywords?.map((k, i) => (
+                        <span key={i} className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg text-xs font-bold">{k}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mb-4">Missing from your Resume</p>
+                    <div className="flex flex-wrap gap-2">
+                      {analysis.missingKeywords?.map((k, i) => (
+                        <span key={i} className="px-3 py-1 bg-red-50 text-red-500 border border-red-100 rounded-lg text-xs font-bold">{k}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          ) : (
+            <div className="h-[500px] flex flex-col items-center justify-center text-center p-12 bg-white rounded-[20px] shadow-soft border border-border">
+              <div className="w-20 h-20 rounded-full bg-surface-alt flex items-center justify-center mb-6">
+                <FileText size={40} className="text-txt-muted" />
+              </div>
+              <h3 className="h3 mb-3">No analysis data yet</h3>
+              <p className="body-large text-txt-muted max-w-sm">Upload your resume on the left to start the AI analysis process.</p>
             </div>
           )}
-
-          {/* Strengths & Improvements */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {analysis.strengths?.length > 0 && (
-              <Card className="p-6">
-                <h3 className="text-sm font-semibold text-emerald-600 flex items-center gap-2 mb-3"><CheckCircle2 size={16} /> Strengths</h3>
-                <ul className="space-y-2">{analysis.strengths.map((s,i) => <li key={i} className="flex items-start gap-2 text-sm text-txt-secondary"><span className="text-emerald-500 mt-0.5">✓</span>{s}</li>)}</ul>
-              </Card>
-            )}
-            {analysis.improvements?.length > 0 && (
-              <Card className="p-6">
-                <h3 className="text-sm font-semibold text-amber-600 flex items-center gap-2 mb-3"><AlertTriangle size={16} /> Improvements</h3>
-                <ul className="space-y-2">{analysis.improvements.map((s,i) => <li key={i} className="flex items-start gap-2 text-sm text-txt-secondary"><span className="text-amber-500 mt-0.5">→</span>{s}</li>)}</ul>
-              </Card>
-            )}
-          </div>
-
-          {/* Keywords */}
-          <Card className="p-6">
-            <h3 className="text-sm font-semibold text-txt-primary mb-4">🔑 Keyword Analysis</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs font-medium text-txt-muted mb-2">Found ✅</p>
-                <div className="flex flex-wrap gap-1.5">{(analysis.keywords||[]).map((k,i) => <span key={i} className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-medium">{k}</span>)}</div>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-txt-muted mb-2">Missing ❌</p>
-                <div className="flex flex-wrap gap-1.5">{(analysis.missingKeywords||[]).map((k,i) => <span key={i} className="px-2.5 py-1 bg-red-50 text-red-500 rounded-full text-xs font-medium">{k}</span>)}</div>
-              </div>
-            </div>
-          </Card>
         </div>
-      )}
+      </div>
     </div>
   );
 }
