@@ -17,7 +17,7 @@ export default function CoverLetterGen() {
   const generate = async () => {
     if (!form.resumeText||!form.jobDescription||!form.company||!form.position) { toast.error('Fill all fields'); return; }
     setLoading(true);
-    try { const{data}=await API.post('/ai/cover-letter',form); setResult(data); toast.success('Cover letter generated!'); } catch(e) { toast.error('Generation failed'); }
+    try { const{data}=await API.post('/ai/cover-letter',form); setResult(data); toast.success('Cover letter generated!'); } catch { toast.error('Generation failed'); }
     setLoading(false);
   };
 

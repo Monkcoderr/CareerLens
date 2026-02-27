@@ -1,24 +1,22 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import API from '../utils/api';
 
 const AuthContext = createContext(null);
+const getStoredUser = () => {
+  const stored = localStorage.getItem('careerlens_user');
+  if (!stored) return null;
+
+  try {
+    return JSON.parse(stored);
+  } catch {
+    localStorage.removeItem('careerlens_user');
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('careerlens_user');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-      } catch (e) {
-        localStorage.removeItem('careerlens_user');
-      }
-    }
-    setLoading(false);
-  }, []);
+  const [user, setUser] = useState(getStoredUser);
+  const loading = false;
 
   const login = async (email, password) => {
     const { data } = await API.post('/auth/login', { email, password });
@@ -52,6 +50,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

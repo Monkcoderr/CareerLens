@@ -25,7 +25,7 @@ export default function InterviewRoom() {
       const { data } = await API.post('/ai/interview/start', config);
       setInterview(data); setCurrentQ(0); setAnswer(''); setFeedback(null); setCompleted(false); setFinalResult(null);
       toast.success('Interview started!');
-    } catch (e) { toast.error('Failed to generate questions'); }
+    } catch { toast.error('Failed to generate questions'); }
     setLoading(false);
   };
 
@@ -35,7 +35,7 @@ export default function InterviewRoom() {
     try {
       const { data } = await API.post('/ai/interview/answer', { interviewId:interview.interviewId, questionIndex:currentQ, answer:answer.trim() });
       setFeedback(data);
-    } catch (e) { toast.error('Evaluation failed'); }
+    } catch { toast.error('Evaluation failed'); }
     setSubmitting(false);
   };
 
@@ -48,7 +48,7 @@ export default function InterviewRoom() {
     try {
       const { data } = await API.post('/ai/interview/complete', { interviewId:interview.interviewId });
       setFinalResult(data); setCompleted(true); toast.success('Interview completed!');
-    } catch (e) { toast.error('Failed to complete'); }
+    } catch { toast.error('Failed to complete'); }
   };
 
   const reset = () => { setInterview(null); setCurrentQ(0); setAnswer(''); setFeedback(null); setCompleted(false); setFinalResult(null); };
