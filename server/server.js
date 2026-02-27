@@ -13,17 +13,36 @@ connectDB();
 // 1. Security & Middleware
 app.use(helmet());
 
-// 2. CORS for Production (Vercel) + local dev (any localhost port)
-const explicitAllowedOrigins = [
-  'https://career-lens-ashen.vercel.app',
-  process.env.FRONTEND_URL
-].filter(Boolean);
+// 2. CORS for Production + local dev
+// Supports:
+// FRONTEND_URL=https://career-lens-ashen.vercel.app
+// CORS_ORIGINS=https://career-lens-ashen.vercel.app,https://your-preview.vercel.app,http://localhost:5174
+const parseOrigins = (value) => {
+  if (!value) return [];
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const explicitAllowedOrigins = Array.from(
+  new Set(
+    [
+      'https://career-lens-ashen.vercel.app',
+      process.env.FRONTEND_URL,
+      ...parseOrigins(process.env.CORS_ORIGINS)
+    ].filter(Boolean)
+  )
+);
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return true; // Postman, server-to-server, health checks
   if (explicitAllowedOrigins.includes(origin)) return true;
   if (/^http:\/\/localhost:\d+$/.test(origin)) return true;
-  if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return true;
+  if (process.env.ALLOW_VERCEL_PREVIEWS === 'true' && /^https:\/\/.*\.vercel\.app$/.test(origin)) {
+    return true;
+  }
   return false;
 };
 
@@ -32,6 +51,7 @@ const corsOptions = {
     if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
+
     console.error(`CORS Error: Origin ${origin} not allowed`);
     return callback(new Error('Not allowed by CORS'));
   },
@@ -65,12 +85,12 @@ app.use('/api/jobs', require('./routes/jobRoutes'));
 
 // 5. Health Check & Root
 app.get('/', (req, res) => {
-  res.json({ message: '🚀 CareerLens API is live!', status: 'Running' });
+  res.json({ message: 'CareerLens API is live!', status: 'Running' });
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'CareerLens API Working Fine', 
+  res.json({
+    status: 'CareerLens API Working Fine',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -87,7 +107,8 @@ app.use((err, req, res, next) => {
 // 7. Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`\n✅ Server successfully started!`);
-  console.log(`📡 URL: http://localhost:${PORT}`);
-  console.log(`🛠️ Mode: ${process.env.NODE_ENV || 'development'}\n`);
+  console.log('\nServer successfully started!');
+  console.log(`URL: http://localhost:${PORT}`);
+  console.log(`Allowed CORS origins: ${explicitAllowedOrigins.join(', ') || 'none'}`);
+  console.log(`Mode: ${process.env.NODE_ENV || 'development'}\n`);
 });
