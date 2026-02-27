@@ -13,28 +13,35 @@ connectDB();
 // 1. Security & Middleware
 app.use(helmet());
 
-// 2. Optimized CORS for Production (Vercel) and Local (Vite)
-const allowedOrigins = [
-  'https://career-lens-ashen.vercel.app', // Your Vercel frontend
-  'http://localhost:5173'                  // Your local development
-];
+// 2. CORS for Production (Vercel) + local dev (any localhost port)
+const explicitAllowedOrigins = [
+  'https://career-lens-ashen.vercel.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, or health checks)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.error(`CORS Error: Origin ${origin} not allowed`);
-      callback(new Error('Not allowed by CORS'));
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Postman, server-to-server, health checks
+  if (explicitAllowedOrigins.includes(origin)) return true;
+  if (/^http:\/\/localhost:\d+$/.test(origin)) return true;
+  if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
     }
+    console.error(`CORS Error: Origin ${origin} not allowed`);
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Body Parsing
 app.use(express.json({ limit: '10mb' }));
