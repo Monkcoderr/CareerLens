@@ -79,6 +79,10 @@ app.use('/api/', limiter);
 
 // 4. API Routes
 
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
+app.use('/api/resume', require('./routes/resumeRoutes'));
+app.use('/api/jobs', require('./routes/jobRoutes'));
 
 // 5. Health Check & Root
 app.get('/', (req, res) => {
