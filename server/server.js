@@ -64,8 +64,7 @@ app.use(cors(corsOptions));
 app.options('/*splat', cors(corsOptions));
 
 // Body Parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 
 // 3. Rate Limiting (Prevents API abuse)
 const limiter = rateLimit({
