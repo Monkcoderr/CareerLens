@@ -60,7 +60,8 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-
+app.use(cors(corsOptions));
+app.options('/*splat', cors(corsOptions));
 
 // Body Parsing
 app.use(express.json({ limit: '10mb' }));
