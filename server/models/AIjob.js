@@ -47,7 +47,10 @@ const AIjobSchema = new mongoose.Schema(
           type: Date,
           default: null
         }
-      },
+      },fileName: {
+      type: String,
+      required: true
+    },
       { timestamps: true }
     );
     
