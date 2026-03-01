@@ -35,4 +35,12 @@ const AIjobSchema = new mongoose.Schema(
       default: 'saved'
     },
     notes: {
+      type: String,status: {
       type: String,
+      enum: ['saved', 'applied', 'interviewing', 'offered', 'rejected', 'accepted'],
+      default: 'saved'
+    },
+    notes: {
+      type: String,
+      default: ''
+    },
