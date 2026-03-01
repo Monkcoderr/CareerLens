@@ -43,4 +43,12 @@ const AIjobSchema = new mongoose.Schema(
     notes: {
       type: String,
       default: ''
-    },
+    },appliedDate: {
+          type: Date,
+          default: null
+        }
+      },
+      { timestamps: true }
+    );
+    
+    module.exports = mongoose.model('Job', jobSchema);
